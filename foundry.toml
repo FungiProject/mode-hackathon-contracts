@@ -1,0 +1,15 @@
+[profile.default]
+src = 'src'
+out = 'out'
+libs = ['lib']
+remappings = [
+    'ds-test/=lib/forge-std/lib/ds-test/src/',
+    'forge-std/=lib/forge-std/src/',
+    'openzeppelin=lib/openzeppelin-contracts/contracts/',
+    'solmate/=lib/solmate/src/',
+]
+
+[etherscan]
+mumbai = { key = "{POLYGONSCAN_API_KEY}" }
+# ffi = true
+# See more config options https://github.com/gakonst/foundry/tree/master/config
