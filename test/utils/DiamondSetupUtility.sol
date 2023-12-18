@@ -29,7 +29,8 @@ contract DiamondSetupUtility is DSTest, DiamondTest {
     OwnershipFacet internal ownershipFacet;
 
     // Addresses
-    address internal constant UNISWAP_V2_ROUTER = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+    // address internal constant UNISWAP_V2_ROUTER = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+    address internal constant UNISWAP_V2_ROUTER = 0x5951479fE3235b689E392E9BC6E968CE10637A52;
     // 0x5951479fE3235b689E392E9BC6E968CE10637A52 // Mode V2Router
 
     // Selector setters
