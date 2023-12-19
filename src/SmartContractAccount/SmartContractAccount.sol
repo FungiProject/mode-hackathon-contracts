@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import "src/mirror/SCAMirror.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IRegister} from "src/external/IRegister.sol";
 
 contract SmartContractAccount is SCAMirror {
     // Modifier for reentrancy guard
@@ -32,10 +33,11 @@ contract SmartContractAccount is SCAMirror {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event DiamondInteraction(address indexed facet, uint256 selectorIndex, bytes data, uint256 timestamp);
 
-    constructor(address _diamondAddress, address _owner) {
+    constructor(address _diamondAddress, address _owner, address _sfsContract, uint256 _tokenId) {
         require(_diamondAddress != address(0), "Diamond address cannot be the zero address.");
         setDiamond(_diamondAddress);
         owner = _owner;
+        IRegister(_sfsContract).assign(_tokenId);
     }
 
     receive() external payable {

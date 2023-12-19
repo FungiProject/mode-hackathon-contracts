@@ -10,6 +10,7 @@ import {OwnershipFacet} from "src/core/facets/OwnershipFacet.sol";
 import {GenericSwapFacet} from "src/app/facets/GenericSwapFacet.sol";
 import {SCAFactory} from "src/app/facets/SCAFactory.sol";
 import {console} from "lib/forge-std/src/Console.sol";
+import {IRegister} from "src/external/IRegister.sol";
 
 /// This script deploys the diamond contract and all the basic Fungi Protocol facets, it then cuts the facets to the diamond
 
@@ -25,6 +26,10 @@ struct DeployedContracts {
 contract DeployDiamond is Script {
     IDiamondCut.FacetCut[] internal cut;
 
+    // Add SFS Contract Address and Instance
+    address internal SFS_ADDRESS = 0xBBd707815a7F7eb6897C7686274AFabd7B579Ff6;
+    IRegister internal sfsContract = IRegister(SFS_ADDRESS);
+
     error NotDeployed(string contractName);
 
     function run() external returns (DeployedContracts memory deployedContracts, bytes memory data) {
@@ -35,6 +40,11 @@ contract DeployDiamond is Script {
         // address diamondOwner = vm.envAddress("LOCAL_DIAMOND_OWNER"); // Address that will pay for the deployment gas fees
 
         vm.startBroadcast(deployerPK);
+
+        // Register in SFS contract and get tokenId
+        sfsContract.register(diamondOwner); // Assuming diamondOwner is the one to be registered
+        uint256 tokenId = sfsContract.getTokenId(diamondOwner);
+
         // Deploy facets
         DiamondCutFacet diamondCut = new DiamondCutFacet();
         console.log("diamondCutFacetAddress: %s", address(diamondCut));
@@ -48,7 +58,7 @@ contract DeployDiamond is Script {
         GenericSwapFacet genericSwap = new GenericSwapFacet();
         console.log("genericSwapFacetAddress: %s", address(genericSwap));
 
-        SCAFactory scaFactory = new SCAFactory();
+        SCAFactory scaFactory = new SCAFactory(SFS_ADDRESS, tokenId);
         console.log("scaFactoryFacetAddress: %s", address(scaFactory));
 
         Diamond diamond = new Diamond(
