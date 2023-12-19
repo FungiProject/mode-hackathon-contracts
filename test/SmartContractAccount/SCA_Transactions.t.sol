@@ -23,6 +23,10 @@ contract SmartContractAccount_Transactions is DSTest {
 
     ForkHelper internal forkHelper;
 
+    //Mode devNetwork
+    address internal SFS_ADDRESS = 0xBBd707815a7F7eb6897C7686274AFabd7B579Ff6;
+    uint256 internal tokenId = 1;
+
     address internal constant USDC_HOLDER = 0xee5B5B923fFcE93A870B3104b7CA09c3db80047A;
     address internal constant SOME_WALLET = 0x552008c0f6870c2f77e5cC1d2eb9bdff03e30Ea0;
 
@@ -50,7 +54,7 @@ contract SmartContractAccount_Transactions is DSTest {
         //////////////////////////////////////
         // Setting up SmartContractAccount ///
         //////////////////////////////////////
-        smartContractAccount = new SmartContractAccount(address(this), address(this));
+        smartContractAccount = new SmartContractAccount(address(this), address(this),SFS_ADDRESS, tokenId);
 
         // Deploy the TokenFaucetHelper contract
         tokenFaucet = new TokenFaucetHelper(address(vm));

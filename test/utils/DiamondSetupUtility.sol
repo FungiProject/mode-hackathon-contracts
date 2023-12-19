@@ -16,6 +16,7 @@ import {ERC4626, Math, SafeERC20} from "@openzeppelin/contracts/token/ERC20/exte
 import {ForkHelper} from "test/utils/ForkHelper.sol";
 import {OwnershipFacet} from "src/core/facets/OwnershipFacet.sol";
 import {SCAFactory} from "src/app/facets/SCAFactory.sol";
+import {IRegister} from "src/external/IRegister.sol";
 
 contract DiamondSetupUtility is DSTest, DiamondTest {
     Vm internal immutable vm = Vm(HEVM_ADDRESS);
@@ -32,6 +33,8 @@ contract DiamondSetupUtility is DSTest, DiamondTest {
     // address internal constant UNISWAP_V2_ROUTER = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
     address internal constant UNISWAP_V2_ROUTER = 0x5951479fE3235b689E392E9BC6E968CE10637A52;
     // 0x5951479fE3235b689E392E9BC6E968CE10637A52 // Mode V2Router
+
+    IRegister internal constant SFS_CONTRACT = IRegister(0xBBd707815a7F7eb6897C7686274AFabd7B579Ff6);
 
     // Selector setters
     bytes4[] swapperFunctionSelectors = new bytes4[](3);
@@ -75,7 +78,10 @@ contract DiamondSetupUtility is DSTest, DiamondTest {
         assertTrue(success, "Setting function approval by signature failed");
 
         // DEPLOY_SCAFACTORY_FACET
-        SCAFactory scaFactory = new SCAFactory();
+        //Register this contract to get an initial NFT owned by this contract
+        SFS_CONTRACT.register(address(this));
+        uint256 tokenId = SFS_CONTRACT.getTokenId(address(this));
+        SCAFactory scaFactory = new SCAFactory(address(SFS_CONTRACT), tokenId);
 
         // Set the SCAFactory function selectors
         scaFactoryFunctionSelectors[0] = scaFactory.createSmartContractAccount.selector;

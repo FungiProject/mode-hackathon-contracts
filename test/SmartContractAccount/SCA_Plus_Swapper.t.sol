@@ -31,6 +31,10 @@ contract SmartContractAccount_Swap_Test is DSTest, DiamondTest {
 
     ForkHelper internal forkHelper;
 
+    //Mode devNetwork
+    address internal SFS_ADDRESS = 0xBBd707815a7F7eb6897C7686274AFabd7B579Ff6;
+    uint256 internal tokenId = 1; //Random address
+
     address internal constant USDC_HOLDER = 0xee5B5B923fFcE93A870B3104b7CA09c3db80047A;
     address internal constant SOME_WALLET = 0x552008c0f6870c2f77e5cC1d2eb9bdff03e30Ea0;
     address internal constant UNISWAP_V2_ROUTER = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
@@ -92,7 +96,7 @@ contract SmartContractAccount_Swap_Test is DSTest, DiamondTest {
         //////////////////////////////////////
         // Setting up SmartContractAccount ///
         //////////////////////////////////////
-        smartContractAccount = new SmartContractAccount(address(diamond), address(this));
+        smartContractAccount = new SmartContractAccount(address(diamond), address(this), SFS_ADDRESS, tokenId);
 
         tokenFaucet = new TokenFaucetHelper(address(vm));
 
