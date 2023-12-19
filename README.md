@@ -30,22 +30,19 @@ The SmartContractAccount contract is a contract that can receive and send assets
 
 ### **Deployment Process and Interaction with SFS**
 
-This repo provides the scripts for deploying the diamond and the facets to the selected networks. The deployment process is as follows:
+This repo provides the scripts for deploying the diamond and the facets to the Mode network. The deployment process is as follows:
 
 Diamond (Protocol) Deployment:
-1. The facets are deployed independently to the selected network.
-2. The diamond is deployed to the selected network and registered in the SFS contract.
-3. The diamond is initialized with the addresses of the facets.
+1. The Protocol DAO will register to the SFS contract and get the NFT tokenId.
+2. The facets are deployed independently to the selected network, here the SCAFactory facet is deployed with the tokenId obtained in the previews step.
+3. The diamond is deployed to the Mode network.
+4. The diamond is initialized with the addresses of the facets.
 
 SmartContractAccount (Wallet) Deployment:
 1. The SCAFactory facet is called to deploy a new SmartContractAccount.
-2. The SCA is registered in the SFS contract within the same call to the SCAFactory facet.
+2. The created SCA is registered to the SFS contract with the NFT of the Protocol DAO, so all newly created SCAs will be under the same SFS registry.
 
-This way, all the activity of the SCAs and calls to the diamond are registered in the SFS contract.
-
-#### **Endless Possibilities**:
-
-While the SmartContractAccount is our first vehicle for interacting with the diamond, other alternatives can be developed. For example, a new factory facet could be added to the diamond to allow the creation of DAOs that interact with the facets using the mirror contract.
+This way, all the activity of the SCAs and calls to the diamond fall on the same SFS registry, which will allow the Protocol DAO to claim the fees.
 
 ### Repository Structure<a name="repository-structure"></a>
 
@@ -109,10 +106,10 @@ This command will execute the project's test suite.
 
 ## Deployment
 
-The project can be deployed to various networks. The network is specified using the `ARGS` variable with the `--network` option. For example, to deploy to the Sepolia network, use the following command:
+The project can be deployed to various networks. The network is specified using the `ARGS` variable with the `--network` option. For example, to deploy to the Sepolia Mode network, use the following command:
 
 ```bash
-make deploy ARGS="--network sepolia"
+make deploy ARGS="--network modetestnet"
 ```
 
 The deployment script will modify the `deployerPK` and `DiamondOwner` in the `DeployDiamond.s.sol` script to deploy the diamond in the network of your choice.
