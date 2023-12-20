@@ -26,6 +26,7 @@ contract SmartContractAccount_Swap_Test1 is DSTest, DiamondTest {
     ForkHelper internal forkHelper;
 
     address internal constant UNISWAP_V2_ROUTER = 0x5951479fE3235b689E392E9BC6E968CE10637A52; //Mode
+    address internal SFS_ADDRESS = 0xBBd707815a7F7eb6897C7686274AFabd7B579Ff6;
 
     //Mock tokens
     ERC20Mock internal USDC_MOCK_CONTRACT;
@@ -76,7 +77,7 @@ contract SmartContractAccount_Swap_Test1 is DSTest, DiamondTest {
         );
         assertTrue(success, "Setting function approval by signature failed");
 
-        smartContractAccount = new SmartContractAccount(address(diamond), address(this));
+        smartContractAccount = new SmartContractAccount(address(diamond), address(this), SFS_ADDRESS, 0);
 
         startingBalance = 500 * 10 ** USDC_MOCK_CONTRACT.decimals();
 
