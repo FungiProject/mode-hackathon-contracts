@@ -11,6 +11,7 @@ import {SmartContractAccount} from "src/SmartContractAccount/SmartContractAccoun
 import {TokenFaucetHelper} from "test/utils/TokenFaucetHelper.sol";
 import {IERC721} from "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 import {TestMinter} from "test/utils/TestMinter.sol";
+import {TestERC20} from "test/utils/TestERC20.sol";
 
 import {ForkHelper} from "test/utils/ForkHelper.sol";
 
@@ -23,15 +24,14 @@ contract SmartContractAccount_Transactions is DSTest {
 
     ForkHelper internal forkHelper;
 
-    address internal constant USDC_HOLDER = 0xee5B5B923fFcE93A870B3104b7CA09c3db80047A;
+    //Mode devNetwork
+    address internal SFS_ADDRESS = 0xBBd707815a7F7eb6897C7686274AFabd7B579Ff6;
+    uint256 internal sfsTokenId = 1;
+
     address internal constant SOME_WALLET = 0x552008c0f6870c2f77e5cC1d2eb9bdff03e30Ea0;
 
-    // Tokens (Mainnet)
-    address internal constant USDC_ADDRESS = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-    address internal constant DAI_ADDRESS = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-    address constant WETH_ADDRESS = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-
-    address public IN_TOKEN = USDC_ADDRESS;
+    TestERC20 internal testERC20Token1;
+    TestERC20 internal testERC20Token2;
 
     uint256 public startingBalance;
 
@@ -45,22 +45,29 @@ contract SmartContractAccount_Transactions is DSTest {
         forkHelper = new ForkHelper();
         forkHelper.fork(vm);
 
-        inToken = ERC20(IN_TOKEN);
+        testERC20Token1 = new TestERC20("TestToken1", "TT1");
+
+        // Mint tokens to the test contract or other addresses as needed
+        uint256 mintAmount = 1000 * 10 ** 18;
+        testERC20Token1.mint(address(this), mintAmount);
+
+        testERC20Token2 = new TestERC20("TestToken2", "TT2");
+
+        // Mint tokens to the test contract or other addresses as needed
+        mintAmount = 1000 * 10 ** 18;
+        testERC20Token2.mint(address(this), mintAmount);
+
+        inToken = testERC20Token1;
+
+        startingBalance = mintAmount / 2;
 
         //////////////////////////////////////
         // Setting up SmartContractAccount ///
         //////////////////////////////////////
-        smartContractAccount = new SmartContractAccount(address(this), address(this));
-
-        // Deploy the TokenFaucetHelper contract
-        tokenFaucet = new TokenFaucetHelper(address(vm));
-
-        // Use the helper to provide the manager address with USDC
-        startingBalance = 500 * 10 ** ERC20(address(inToken)).decimals();
-        tokenFaucet.provideERC20TokenTo(address(inToken), address(this), startingBalance); // Providing 2 denAsset
+        smartContractAccount = new SmartContractAccount(address(this), address(this),SFS_ADDRESS, sfsTokenId);
     }
 
-    function test1_canReceiveUSDC() public {
+    function test1_canReceiveERC20() public {
         // Transfer the USDC to the SmartContractAccount
         inToken.transfer(address(smartContractAccount), startingBalance / 2);
         // Check the balance of the SmartContractAccount
@@ -69,17 +76,17 @@ contract SmartContractAccount_Transactions is DSTest {
     }
 
     function test2CanTransferUSDC() public {
-        test1_canReceiveUSDC();
+        test1_canReceiveERC20();
 
-        // Capture the inToken balance of SOME_WALLET
-        uint256 balanceBefore = inToken.balanceOf(SOME_WALLET);
-        console.log("SOME_WALLET balance before: %s", balanceBefore);
+        // Capture the inToken balance of THIS contract
+        uint256 balanceBefore = inToken.balanceOf(address(this));
+        console.log("THIS contract balance before: %s", balanceBefore);
 
-        // Transfer the USDC to SOME_WALLET
-        smartContractAccount.transferERC20(address(inToken), SOME_WALLET, startingBalance / 4);
+        // Transfer the USDC to THIS contract
+        smartContractAccount.transferERC20(address(inToken), address(this), startingBalance / 4);
 
-        // Check the balance of SOME_WALLET
-        uint256 balanceAfter = inToken.balanceOf(SOME_WALLET);
+        // Check the balance of THIS contract
+        uint256 balanceAfter = inToken.balanceOf(address(this));
         console.log("SOME_WALLET balance after: %s", balanceAfter);
         assertEq(balanceAfter, balanceBefore + startingBalance / 4);
     }
@@ -118,10 +125,10 @@ contract SmartContractAccount_Transactions is DSTest {
         testMinter.transferFrom(address(this), address(smartContractAccount), tokenId);
 
         // Transfer the token from SmartContractAccount to a specified address (e.g., SOME_WALLET)
-        smartContractAccount.transferERC721(address(testMinter), SOME_WALLET, tokenId);
+        smartContractAccount.transferERC721(address(testMinter), address(this), tokenId);
 
         // Verify the token is now owned by the specified address
-        assertEq(testMinter.ownerOf(tokenId), SOME_WALLET, "Token transfer from SmartContractAccount failed");
+        assertEq(testMinter.ownerOf(tokenId), address(this), "Token transfer from SmartContractAccount failed");
     }
 
     function test5_EtherReceivedEvent() public {
@@ -180,9 +187,9 @@ contract SmartContractAccount_Transactions is DSTest {
         assertEq(smartContractAccount.owner(), newOwner, "Ownership transfer failed");
     }
 
-    ///////////////////////////////////////
-    /// Helper Functions /////////////////
-    ///////////////////////////////////////
+    // ///////////////////////////////////////
+    // /// Helper Functions /////////////////
+    // ///////////////////////////////////////
 
     function onERC721Received(address operator, address from, uint256 tokenId, bytes memory data)
         public

@@ -7,13 +7,21 @@ import {SmartContractAccount} from "src/SmartContractAccount/SmartContractAccoun
 contract SCAFactory {
     // Events and other contract elements
 
+    address internal immutable sfsRegister; 
+    uint256 internal immutable tokenId;
+    
+    constructor(address _sfsRegister, uint256 _tokenId){
+        sfsRegister = _sfsRegister;
+        tokenId = _tokenId;
+    }
+
     function createSmartContractAccount(address _diamondAddress, address _owner)
         public
         returns (address newAccountAddress)
     {
         require(_diamondAddress != address(0), "Diamond address cannot be the zero address.");
 
-        SmartContractAccount newAccount = new SmartContractAccount(_diamondAddress, _owner);
+        SmartContractAccount newAccount = new SmartContractAccount(_diamondAddress, _owner, sfsRegister, tokenId);
         // Update the call to LibSCAFactory.addSmartContractAccount to include the owner
         LibSCAFactory.addSmartContractAccount(address(newAccount), _owner);
 
