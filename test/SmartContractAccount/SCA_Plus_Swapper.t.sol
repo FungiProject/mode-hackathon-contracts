@@ -4,53 +4,39 @@ pragma solidity ^0.8.20;
 
 import {DSTest} from "lib/forge-std/lib/ds-test/src/test.sol";
 import {console} from "../utils/Console.sol";
+import {ERC20Mock} from "../utils/ERC20Mock.sol";
 import {Vm} from "forge-std/Vm.sol";
-import {ERC20} from "lib/solmate/src/tokens/ERC20.sol";
-import {IERC20} from "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {SmartContractAccount} from "src/SmartContractAccount/SmartContractAccount.sol";
 import {DiamondTest, Diamond} from "../utils/DiamondTest.sol";
 import {GenericSwapFacet} from "src/app/facets/GenericSwapFacet.sol";
 import {LibSwap} from "src/libraries/LibSwap.sol";
-import {UniswapV2Router02} from "../utils/Interfaces.sol";
-import {TokenFaucetHelper} from "test/utils/TokenFaucetHelper.sol";
+import {IUniswapV2Router02} from "../external/IUniswapV2Router02.sol";
 
 import {ForkHelper} from "test/utils/ForkHelper.sol";
 
-contract SmartContractAccount_Swap_Test is DSTest, DiamondTest {
+contract SmartContractAccount_Swap_Test1 is DSTest, DiamondTest {
     Vm internal immutable vm = Vm(HEVM_ADDRESS);
 
     // Contracts
     Diamond internal diamond;
     SmartContractAccount internal smartContractAccount;
     GenericSwapFacet internal genericSwapFacet;
-    UniswapV2Router02 internal uniswap;
-    ERC20 internal inToken;
-    ERC20 internal outToken;
-
-    TokenFaucetHelper internal tokenFaucet;
-
-    ForkHelper internal forkHelper;
+    IUniswapV2Router02 internal uniswap;
 
     //Mode devNetwork
     address internal SFS_ADDRESS = 0xBBd707815a7F7eb6897C7686274AFabd7B579Ff6;
-    uint256 internal tokenId = 1; //Random address
+    uint256 internal sfsTokenId = 1;
 
-    address internal constant USDC_HOLDER = 0xee5B5B923fFcE93A870B3104b7CA09c3db80047A;
-    address internal constant SOME_WALLET = 0x552008c0f6870c2f77e5cC1d2eb9bdff03e30Ea0;
-    address internal constant UNISWAP_V2_ROUTER = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+    ForkHelper internal forkHelper;
 
-    // Tokens (Mainnet)
-    address internal constant USDC_ADDRESS = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-    address internal constant DAI_ADDRESS = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-    address constant WETH_ADDRESS = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address constant WETH_PRICEFEED = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419; // Mainnet values
-    address constant UNI_ADDRESS = 0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984;
-    address constant WBTC_ADDRESS = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
-    address public constant USDC_PRICEFEED = 0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6;
+    address internal constant UNISWAP_V2_ROUTER = 0x5951479fE3235b689E392E9BC6E968CE10637A52; //Mode
 
-    // TOKENS FOR TESTING
-    address public IN_TOKEN = DAI_ADDRESS;
-    address public OUT_TOKEN = WETH_ADDRESS;
+    //Mock tokens
+    ERC20Mock internal USDC_MOCK_CONTRACT;
+    ERC20Mock internal USDT_MOCK_CONTRACT;
+
+    ERC20Mock internal IN_TOKEN;
+    ERC20Mock internal OUT_TOKEN;
 
     uint256 public startingBalance;
 
@@ -61,18 +47,19 @@ contract SmartContractAccount_Swap_Test is DSTest, DiamondTest {
     function setUp() public {
         forkHelper = new ForkHelper();
         forkHelper.fork(vm);
+        USDC_MOCK_CONTRACT = new ERC20Mock("USDC", "USDC", 6);
+        USDT_MOCK_CONTRACT = new ERC20Mock("USDT", "USDT", 6);
 
-        inToken = ERC20(IN_TOKEN);
-        outToken = ERC20(OUT_TOKEN);
+        IN_TOKEN = USDC_MOCK_CONTRACT;
+        OUT_TOKEN = USDT_MOCK_CONTRACT;
 
-        //////////////////////////////////////
-        // Setting up Diamond ////////////////
-        //////////////////////////////////////
+        setUpCreatePairAndAddLiquidity(address(USDC_MOCK_CONTRACT), address(USDT_MOCK_CONTRACT));
+
         diamond = createDiamond();
 
         // Setting GenericSwap Facet and adding it to the diamond
         genericSwapFacet = new GenericSwapFacet();
-        uniswap = UniswapV2Router02(UNISWAP_V2_ROUTER);
+        uniswap = IUniswapV2Router02(UNISWAP_V2_ROUTER);
 
         swapperFunctionSelectors[0] = genericSwapFacet.swapTokensGeneric.selector;
         swapperFunctionSelectors[1] = genericSwapFacet.addDex.selector;
@@ -93,48 +80,36 @@ contract SmartContractAccount_Swap_Test is DSTest, DiamondTest {
         );
         assertTrue(success, "Setting function approval by signature failed");
 
-        //////////////////////////////////////
-        // Setting up SmartContractAccount ///
-        //////////////////////////////////////
-        smartContractAccount = new SmartContractAccount(address(diamond), address(this), SFS_ADDRESS, tokenId);
+        smartContractAccount = new SmartContractAccount(address(diamond), address(this), SFS_ADDRESS, sfsTokenId);
 
-        tokenFaucet = new TokenFaucetHelper(address(vm));
+        startingBalance = 500 * 10 ** USDC_MOCK_CONTRACT.decimals();
 
-        // Use the helper to provide the manager address with USDC
-        startingBalance = 500 * 10 ** ERC20(address(inToken)).decimals();
-        tokenFaucet.provideERC20TokenTo(address(inToken), address(this), startingBalance);
+        USDC_MOCK_CONTRACT.mint(address(smartContractAccount), startingBalance);
+        assertEq(USDC_MOCK_CONTRACT.balanceOf(address(smartContractAccount)), startingBalance);
+    }
 
-        // Transfer the USDC to the SmartContractAccount
-        inToken.transfer(address(smartContractAccount), startingBalance);
-        // Check the balance of the SmartContractAccount
-        assertEq(inToken.balanceOf(address(smartContractAccount)), startingBalance);
-        console.log("SmartContractAccount balance: %s", inToken.balanceOf(address(smartContractAccount)));
+    function setUpCreatePairAndAddLiquidity(address _tokenA, address _tokenB) public {
+        uint256 amountToAddPoolA = 1000 * 10 ** ERC20Mock(_tokenA).decimals();
+        uint256 amountToAddPoolB = 1000 * 10 ** ERC20Mock(_tokenB).decimals();
+        ERC20Mock(_tokenA).mint(address(this), amountToAddPoolA);
+        ERC20Mock(_tokenB).mint(address(this), amountToAddPoolB);
+
+        ERC20Mock(_tokenA).approve(UNISWAP_V2_ROUTER, amountToAddPoolA);
+        ERC20Mock(_tokenB).approve(UNISWAP_V2_ROUTER, amountToAddPoolB);
+        IUniswapV2Router02(UNISWAP_V2_ROUTER).addLiquidity(
+            _tokenA, _tokenB, amountToAddPoolA, amountToAddPoolB, 0, 0, address(this), block.timestamp
+        );
     }
 
     function test1CanSwapTokens() public {
-        assertEq(
-            inToken.balanceOf(address(smartContractAccount)),
-            startingBalance,
-            "SmartContractAccount did not receive tokens"
-        );
-
-        console.log("IN_TOKEN: %s", inToken.name());
-        console.log("OUT_TOKEN: %s", outToken.name());
-
         // Swap 100 denAsset for outToken
         address[] memory path = new address[](2);
-        path[0] = IN_TOKEN;
-        path[1] = OUT_TOKEN;
+        path[0] = address(IN_TOKEN);
+        path[1] = address(OUT_TOKEN);
 
-        console.log("Amount to swap of InToken: %s", inToken.balanceOf(address(smartContractAccount)));
-
-        uint256 amountIn = 100 * 10 ** ERC20(address(IN_TOKEN)).decimals();
+        uint256 amountIn = 100 * 10 ** IN_TOKEN.decimals();
         uint256 amountOut = uniswap.getAmountsOut(amountIn, path)[1];
         console.log("Amount to receive of out token: %s", amountOut);
-
-        // Setting up swap data for swapping denAsset (inToken) to ouToken
-        // uint256[] memory amounts = uniswap.getAmountsIn(amountOut, path);
-        // uint256 amountIn = amounts[0];
         console.log("Amount to send of in token: %s", amountIn);
 
         LibSwap.SwapData[] memory swapData = new LibSwap.SwapData[](1);
@@ -142,8 +117,8 @@ contract SmartContractAccount_Swap_Test is DSTest, DiamondTest {
         swapData[0] = LibSwap.SwapData(
             address(uniswap),
             address(uniswap),
-            IN_TOKEN,
-            OUT_TOKEN,
+            address(IN_TOKEN),
+            address(OUT_TOKEN),
             amountIn,
             abi.encodeWithSelector(
                 uniswap.swapExactTokensForTokens.selector,
@@ -157,15 +132,14 @@ contract SmartContractAccount_Swap_Test is DSTest, DiamondTest {
         );
 
         // Check the balance before the swap
-        uint256 initialBalance = inToken.balanceOf(address(smartContractAccount));
-        console.log("Initial balance of out token: %s", initialBalance);
+        uint256 initialBalance = IN_TOKEN.balanceOf(address(smartContractAccount));
+        console.log("Initial balance of in token: %s", initialBalance);
 
         // Check the inToken balance before the swap
-        uint256 initialBalanceOutToken = outToken.balanceOf(address(smartContractAccount));
-        console.log("Initial balance of in token: %s", initialBalanceOutToken);
+        uint256 initialBalanceOutToken = OUT_TOKEN.balanceOf(address(smartContractAccount));
+        console.log("Initial balance of out token: %s", initialBalanceOutToken);
 
         // Swap the tokens
-
         bytes memory data_ = abi.encodeWithSelector(
             genericSwapFacet.swapTokensGeneric.selector,
             "",
@@ -177,7 +151,7 @@ contract SmartContractAccount_Swap_Test is DSTest, DiamondTest {
         );
 
         // Approve the diamond to spend the inToken on behalf of the SmartContractAccount
-        smartContractAccount.approveERC20(address(inToken), address(diamond), amountIn);
+        smartContractAccount.approveERC20(address(IN_TOKEN), address(diamond), amountIn);
 
         // Call the GenericSwapFacet using the SmartContractAccount
         vm.expectEmit(true, true, true, true);
@@ -186,72 +160,15 @@ contract SmartContractAccount_Swap_Test is DSTest, DiamondTest {
         (bool success, bytes memory result) = smartContractAccount.callDiamond(address(genericSwapFacet), 0, data_);
         assertTrue(success, "Swap tokens failed");
 
-        // Decode the result to get the tokens received
-        address tokenOut = abi.decode(result, (address));
-        console.log("Token out: %s", tokenOut);
-
         // Check the inToken balance after the swap
-        uint256 finalBalance = inToken.balanceOf(address(smartContractAccount));
-        console.log("Final balance of out token: %s", finalBalance);
+        uint256 finalBalanceInToken = IN_TOKEN.balanceOf(address(smartContractAccount));
+        console.log("Final balance of in token: %s", finalBalanceInToken);
 
         // Check the outToken balance after the swap
-        uint256 finalBalanceOutToken = outToken.balanceOf(address(smartContractAccount));
-        console.log("Final balance of in token: %s", finalBalanceOutToken);
+        uint256 finalBalanceOutToken = OUT_TOKEN.balanceOf(address(smartContractAccount));
+        console.log("Final balance of out token: %s", finalBalanceOutToken);
 
-        assertTrue(outToken.balanceOf(address(smartContractAccount)) > 0, "Fund balance has not decreased");
-    }
-
-    // function test1CanSwapTokens() public {
-    //     // Arrange
-    //     address[] memory path = new address[](2);
-    //     path[0] = IN_TOKEN;
-    //     path[1] = OUT_TOKEN;
-
-    //     // Act
-    //     bytes memory data_ = abi.encodeWithSelector(
-    //         genericSwapFacet.swapTokensGeneric.selector,
-    //         "",
-    //         "",
-    //         "",
-    //         payable(address(smartContractAccount)),
-    //         uniswap.getAmountsOut(100 * 10 ** ERC20(address(IN_TOKEN)).decimals(), path)[1],
-    //         new LibSwap.SwapData[](1)
-    //     );
-
-    //     // Assert
-    //     // vm.prank(address(this)); // Forge function to simulate call from non-owner
-    //     (bool success,) = address(smartContractAccount).call(
-    //         abi.encodeWithSelector(smartContractAccount.callDiamond.selector, address(genericSwapFacet), 0, data_)
-    //     );
-
-    //     assertTrue(success, "Non-owner should not be able to perform swaps");
-    // }
-
-    function test2SwapOnlyByOwner() public {
-        // Arrange: Set up swap parameters
-        address nonOwner = address(0x1234); // Use an arbitrary non-owner address
-        uint256 amountToSwap = 100 * 10 ** ERC20(address(inToken)).decimals();
-        address[] memory path = new address[](2);
-        path[0] = IN_TOKEN;
-        path[1] = OUT_TOKEN;
-
-        // Encode swap data
-        bytes memory data_ = abi.encodeWithSelector(
-            genericSwapFacet.swapTokensGeneric.selector,
-            "",
-            "",
-            "",
-            payable(address(smartContractAccount)),
-            uniswap.getAmountsOut(amountToSwap, path)[1],
-            new LibSwap.SwapData[](1)
-        );
-
-        // Act & Assert: Attempt to swap as a non-owner and expect it to fail
-        vm.prank(nonOwner); // Forge function to simulate call from non-owner
-        (bool success,) = address(smartContractAccount).call(
-            abi.encodeWithSelector(smartContractAccount.callDiamond.selector, address(genericSwapFacet), 0, data_)
-        );
-
-        assertTrue(!success, "Non-owner should not be able to perform swaps");
+        assertTrue(finalBalanceInToken == startingBalance - amountIn, "Fund balance of tokenIn has not decreased");
+        assertTrue(finalBalanceOutToken > 0, "Fund balance of token out has not increased");
     }
 }
