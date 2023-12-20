@@ -46,7 +46,7 @@ ifeq ($(findstring --network latestnet,$(ARGS)),--network latestnet)
 endif
 
 # MODE TESTNET
-ifeq ($(findstring --network modetestnet,$(ARGS)),--network modetestnet)
+ifeq ($(findstring --network mode,$(ARGS)),--network mode)
 	NETWORK_ARGS := --ffi --via-ir --rpc-url $(MODE_TESTNET_RPC_URL) --private-key $(MODE_TESTNET_PRIVATE_KEY) --broadcast -vvvv
 endif
 
@@ -54,7 +54,6 @@ endif
 # e.g. make deploy ARGS="--network sepolia"
 deploy:
 	forge script script/deploy/deployDiamondWithSCA.s.sol $(NETWORK_ARGS)
-	# bash script/deploy/deployDiamond.sh $(NETWORK_ARGS)
 
 # run node
 node:

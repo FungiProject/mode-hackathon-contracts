@@ -36,14 +36,16 @@ contract DeployDiamond is Script {
         // uint256 deployerPK = vm.envUint("LOCAL_DEPLOYER_PRIVATE_KEY"); // Deploy on localhost
         uint256 deployerPK = vm.envUint("SEPOLIA_PRIVATE_KEY"); // Deploy on Sepolia
 
+        // address diamondOwner = 0x2b3f549dB85beDf29f8157C2c9a40E3209DE34cE;
         address diamondOwner = vm.envAddress("SEPOLIA_DIAMOND_OWNER"); // Address that will pay for the deployment gas fees
         // address diamondOwner = vm.envAddress("LOCAL_DIAMOND_OWNER"); // Address that will pay for the deployment gas fees
 
         vm.startBroadcast(deployerPK);
 
         // Register in SFS contract and get tokenId
-        sfsContract.register(diamondOwner); // Assuming diamondOwner is the one to be registered
-        uint256 tokenId = sfsContract.getTokenId(diamondOwner);
+        // sfsContract.register(diamondOwner); // Assuming diamondOwner is the one to be registered
+        // uint256 tokenId = sfsContract.getTokenId(diamondOwner);
+        uint256 tokenId = 189;
 
         // Deploy facets
         DiamondCutFacet diamondCut = new DiamondCutFacet();

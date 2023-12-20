@@ -150,6 +150,9 @@ contract SmartContractAccount_Swap_Test1 is DSTest, DiamondTest {
             swapData
         );
 
+        console.log("Data: ");
+        console.logBytes(data_);
+
         // Approve the diamond to spend the inToken on behalf of the SmartContractAccount
         smartContractAccount.approveERC20(address(IN_TOKEN), address(diamond), amountIn);
 
