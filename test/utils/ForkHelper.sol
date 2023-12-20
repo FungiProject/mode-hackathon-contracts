@@ -5,10 +5,11 @@ import {Vm} from "forge-std/Vm.sol";
 
 contract ForkHelper {
     function fork(Vm vm) public {
-        string memory rpcUrl = vm.envString("MAINNET_RPC_URL");
+        //string memory rpcUrl = vm.envString("MAINNET_RPC_URL");
         // string memory rpcUrl = vm.envString("ARBITRUM_RPC_URL");
         // string memory rpcUrl = vm.envString("LATESTNET_NODE_URI");
-        uint256 blockNumber = 18765997;
+        string memory rpcUrl = vm.envString("ETH_NODE_URI_MODE");
+        uint256 blockNumber = 7524861;
         vm.createSelectFork(rpcUrl, blockNumber);
     }
 
