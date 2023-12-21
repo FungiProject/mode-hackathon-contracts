@@ -70,13 +70,13 @@ contracts
 │   ├── app                   // application facets such as the ones for swapping
 │   ├── core                  // Diamond contract with the basic facets: DiamondCut, DiamondLoupe, Ownership
 │   ├── Errors                // error definitions
-│   ├── SmartContractAccount  // fund contract
+│   ├── SmartContractAccount  // Smart Contract Account (SCA) contract
 │   ├── libraries             // libraries for updating the diamond storage
 |   └── mirror                // diamond mirror contract
 │
 ├─── test                     // contract unit tests
 │   ├─── facets               // facet tests
-│   ├─── SmartContractAccount // fund tests
+│   ├─── SmartContractAccount // SCA tests
 │   └─── utils                // testing utility functions
 │
 ├───Makefile                  // makefile for running tests, deploying contracts, running test nodes and installing dependencies
@@ -84,7 +84,7 @@ contracts
 
 ```
 
-GitHub Copilot: # Project Setup and Deployment Instructions
+# Project Setup and Deployment Instructions
 
 This project uses a Makefile to manage common tasks such as installation, building, testing, and deployment. Here's a brief explanation of each command:
 
