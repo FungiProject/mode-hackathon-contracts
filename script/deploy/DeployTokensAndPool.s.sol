@@ -26,6 +26,12 @@ contract DeployTokensAndPool is Script {
         // Create liquidity pool
         createLiquidityPool(USDC_MOCK, USDT_MOCK, deployerAddress);
 
+        // Mint tokens to deployer
+        uint256 amountToAddA = 1000 * 10 ** USDC_MOCK.decimals();
+        uint256 amountToAddB = 1000 * 10 ** USDT_MOCK.decimals();
+        USDC_MOCK.mint(deployerAddress, amountToAddA);
+        USDT_MOCK.mint(deployerAddress, amountToAddB);
+
         vm.stopBroadcast();
     }
 

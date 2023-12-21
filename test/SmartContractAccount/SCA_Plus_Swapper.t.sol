@@ -78,6 +78,8 @@ contract SmartContractAccount_Swap_Test1 is DSTest, DiamondTest {
                 genericSwapFacet.setFunctionApprovalBySignature.selector, uniswap.swapExactTokensForTokens.selector
             )
         );
+        console.log("Function selector: ");
+        console.logBytes4(uniswap.swapExactTokensForTokens.selector);
         assertTrue(success, "Setting function approval by signature failed");
 
         smartContractAccount = new SmartContractAccount(address(diamond), address(this), SFS_ADDRESS, sfsTokenId);
