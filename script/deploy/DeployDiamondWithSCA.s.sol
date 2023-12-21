@@ -30,6 +30,9 @@ contract DeployDiamond is Script {
     address internal SFS_ADDRESS = 0xBBd707815a7F7eb6897C7686274AFabd7B579Ff6;
     IRegister internal sfsContract = IRegister(SFS_ADDRESS);
 
+    // Add Uniswap Router Address
+    address internal UNISWAP_V2_ROUTER = 0x5951479fE3235b689E392E9BC6E968CE10637A52;
+
     error NotDeployed(string contractName);
 
     function run() external returns (DeployedContracts memory deployedContracts, bytes memory data) {
@@ -168,6 +171,25 @@ contract DeployDiamond is Script {
         if (!success) {
             revert(string(returnData));
         }
+
+        // // Call diamond to setDex
+        // (success, returnData) =
+        //     address(diamond).call(abi.encodeWithSelector(genericSwap.addDex.selector, UNISWAP_V2_ROUTER));
+
+        // if (!success) {
+        //     revert(string(returnData));
+        // }
+
+        // // Call diamond to setFunctionApprovalBySignature
+        // (success, returnData) = address(diamond).call(
+        //     abi.encodeWithSelector(
+        //         genericSwap.setFunctionApprovalBySignature.selector, uniswap.swapExactTokensForTokens.selector
+        //     )
+        // );
+
+        // if (!success) {
+        //     revert(string(returnData));
+        // }
 
         vm.stopBroadcast();
 

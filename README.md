@@ -2,6 +2,18 @@
 
 Fungi Protocol is a dynamic, modular, and scalable DeFi aggregator built upon the diamond standard (ERC-2535). Stemming from the challenges posed by the rapid expansion of the DeFi sector and the need for standardization, Fungi Protocol proposes a solution to foster structured and unified DeFi development and adoption.
 
+### **Problem Statement**
+
+Development on web3 is quite a paradigm shift from other sectors of software development, all new functionalities are permanently added to a blockchain in the form of a smart contract, and if that contract has a bug or is not maintained it just remains there as unused infrastructure. On the other hand, navigating through the projects that are maintained and have active traffic is still challenging as one must deal with lots of non-human readable addresses to move around and understand lots of low level details about the project in order to interact with it. So development in web3 is like driving through a landscape of ghost towns and following directions in the form of 40 characters hexadecimal signals.
+
+A lot of this complexity can be abstracted away to allow other developers to build by just focusing on the functionalities instead of in the smart contracts that provide them. To do this we would have to make lots of contracts for each protocol and a set of tools for calling them in the right format.
+
+![Directions](misc/where-to-uniswap.png)
+
+### **Solution**
+
+This repo in combination with our UI allows users to call functions without having to think about addresses or formatting, all while using a smart contract account as a vehicle for the web3 landscape. A user using this smart account can perform swaps (in this first iteration) or any other number of functionalities in a seamless way. On the other hand, the main contract of our protocol is expected to receive new functionalities from the community to cover all existing protocols of interest and create new ones by combining existing ones.
+
 #### **Core Concept**:
 
 Fungi Protocol relies on the concept of a "diamond" and its facets. These facets are modular chunks of functionality that can be attached to or replaced in the diamond, making the protocol adaptable and upgradable. The facets are meant to be used by external contracts that desire to overcome the contract size limit set on EIP-170. The protocol will offer tools to easily add new facets to the diamond with minimal effort and without the need to redeploy the entire diamond. We expect that the community will develop a wide range of facets that will be used to build a variety of DeFi products and combining them in different ways to create new products on top of the DeFi primitives, following a rigurous and efficient auditing process.
@@ -126,3 +138,4 @@ make node
 This command will start an Anvil node.
 
 Please note that you need to have a `.env` file in the project root with the necessary environment variables set (e.g., `SEPOLIA_RPC_URL`, `SEPOLIA_PRIVATE_KEY`, `ETHERSCAN_API_KEY`, etc.) for the deployment and other network-related commands to work correctly.
+

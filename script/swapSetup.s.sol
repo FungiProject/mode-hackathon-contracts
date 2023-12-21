@@ -55,8 +55,7 @@ contract DeployTokensAndPool is Script {
         path[1] = address(OUT_TOKEN);
 
         uint256 amountIn = 10 * 10 ** 6;
-        // uint256 amountOut = uniswapRouter.getAmountsOut(amountIn, path)[1];
-        uint256 amountOut = 0;
+        uint256 amountOut = uniswapRouter.getAmountsOut(amountIn, path)[1];
 
         LibSwap.SwapData[] memory swapData = new LibSwap.SwapData[](1);
         swapData[0] = LibSwap.SwapData(

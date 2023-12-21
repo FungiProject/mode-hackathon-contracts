@@ -29,8 +29,8 @@ contract DeployTokensAndPool is Script {
         // Mint tokens to deployer
         uint256 amountToAddA = 1000 * 10 ** USDC_MOCK.decimals();
         uint256 amountToAddB = 1000 * 10 ** USDT_MOCK.decimals();
-        USDC_MOCK.mint(deployerAddress, amountToAddA);
-        USDT_MOCK.mint(deployerAddress, amountToAddB);
+        USDC_MOCK.mint(0xF70c1cEa8909563619547128A92dd7CC965F9657, amountToAddA);
+        USDT_MOCK.mint(0xF70c1cEa8909563619547128A92dd7CC965F9657, amountToAddB);
 
         vm.stopBroadcast();
     }
